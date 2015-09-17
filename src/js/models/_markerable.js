@@ -143,7 +143,7 @@ export default class Markerable extends Section {
 
   /**
    * @return {Array} New markers that match the boundaries of the
-   * range.
+   * range. Does not change the existing markers in this section.
    */
   markersFor(headOffset, tailOffset) {
     const range = {head: {section:this, offset:headOffset},

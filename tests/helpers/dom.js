@@ -171,6 +171,30 @@ function triggerKeyCommand(editor, string, modifier) {
   editor.triggerEvent(editor.element, 'keydown', keyEvent);
 }
 
+// Allows our fake copy and paste events to communicate with each other.
+const lastCopyData = {};
+function triggerCopyEvent(editor) {
+  const event = {
+    preventDefault() {},
+    clipboardData: {
+      setData(type, value) { lastCopyData[type] = value; }
+    }
+  };
+  editor.triggerEvent(editor.element, 'copy', event);
+  document.execCommand('copy', false);
+}
+
+function triggerPasteEvent(editor) {
+  const event = {
+    preventDefault() {},
+    clipboardData: {
+      getData(type) { return lastCopyData[type]; }
+    }
+  };
+  editor.triggerEvent(editor.element, 'paste', event);
+  document.execCommand('paste', false);
+}
+
 const DOMHelper = {
   moveCursorTo,
   selectText,
@@ -185,7 +209,9 @@ const DOMHelper = {
   triggerForwardDelete,
   triggerEnter,
   insertText,
-  triggerKeyCommand
+  triggerKeyCommand,
+  triggerCopyEvent,
+  triggerPasteEvent
 };
 
 export { triggerEvent };

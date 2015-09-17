@@ -393,3 +393,21 @@ test('#sectionsContainedBy when range starts/ends in list item', (assert) => {
   assert.ok(containedSections.indexOf(card) !== -1, 'contains card');
   assert.ok(containedSections.indexOf(s1) !== -1, 'contains section');
 });
+
+test('#cloneRange creates a mobiledoc from the given range', (assert) => {
+  const post = Helpers.postAbstract.build(
+    ({post, markupSection, marker}) => {
+    return post([markupSection('p', [marker('abc')])]);
+  });
+  const section = post.sections.head;
+  const range = Range.create(section,1,section,2); // "b"
+
+  const mobiledoc = post.cloneRange(range);
+  const expectedMobiledoc = Helpers.mobiledoc.build(({post, marker, markupSection}) => {
+    return post([markupSection('p',[marker('b')])]);
+  });
+
+  assert.deepEqual(mobiledoc, expectedMobiledoc);
+});
+
+// test that it works for non-markerable sections

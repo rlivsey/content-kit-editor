@@ -1,7 +1,8 @@
 import { POST_TYPE } from './types';
-import LinkedList from 'content-kit-editor/utils/linked-list';
-import { forEach, compact } from 'content-kit-editor/utils/array-utils';
-import Set from 'content-kit-editor/utils/set';
+import LinkedList from '../utils/linked-list';
+import { forEach, compact } from '../utils/array-utils';
+import Set from '../utils/set';
+import MobiledocRenderer from '../renderers/mobiledoc';
 
 export default class Post {
   constructor() {
@@ -142,7 +143,8 @@ export default class Post {
     return containedSections;
   }
 
-  // return the next section that has markers after this one
+  // return the next section that has markers after this one,
+  // possibly skipping non-markerable sections
   _nextMarkerableSection(section) {
     if (!section) { return null; }
     const isMarkerable = s => !!s.markers;
@@ -170,5 +172,20 @@ export default class Post {
         return this._nextMarkerableSection(parent(section));
       }
     }
+  }
+
+  cloneRange(range) {
+    const post = this.builder.createPost();
+    const { builder } = this;
+    this.walkMarkerableSections(range, section => {
+      let newSection = builder.createMarkupSection(section.tagName);
+      let currentRange = range.trimTo(section);
+      forEach(
+        section.markersFor(currentRange.headSectionOffset, currentRange.tailSectionOffset),
+        m => newSection.markers.append(m)
+      );
+      post.sections.append(newSection);
+    });
+    return MobiledocRenderer.render(post);
   }
 }

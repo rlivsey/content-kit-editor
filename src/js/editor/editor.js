@@ -17,7 +17,7 @@ import MobiledocRenderer from '../renderers/mobiledoc';
 
 import { mergeWithOptions } from 'content-kit-utils';
 import { clearChildNodes, addClassName, parseHTML } from '../utils/dom-utils';
-import { forEach, filter } from '../utils/array-utils';
+import { reduce, forEach, filter } from '../utils/array-utils';
 import { setData } from '../utils/element-utils';
 import mixin from '../utils/mixin';
 import EventListenerMixin from '../utils/event-listener';
@@ -476,7 +476,7 @@ class Editor {
   }
 
   _setupListeners() {
-    const elementEvents = ['keydown', 'keyup', 'input', 'dragover', 'drop', 'paste'];
+    const elementEvents = ['keydown', 'keyup', 'input', 'dragover', 'drop', 'copy', 'paste'];
     const documentEvents = ['mouseup'];
 
     elementEvents.forEach(eventName => {
@@ -579,8 +579,38 @@ class Editor {
     }
   }
 
+  handleCopy(event) {
+    const { clipboardData } = event;
+    const range = this.cursor.offsets;
+    const mobiledoc = this.post.cloneRange(range);
+    const html = `<div data-mobiledoc='${JSON.stringify(mobiledoc)}'></div>`;
+    clipboardData.setData('text/html', html);
+    event.preventDefault();
+  }
+
   handlePaste(event) {
     event.preventDefault(); // FIXME for now, just prevent pasting
+    const html = event.clipboardData.getData('text/html');
+    const mobiledocRegex = new RegExp(/data\-mobiledoc='(.*)'>/);
+    let mobiledoc, post;
+    if (mobiledocRegex.test(html)) {
+      const mobiledocString = html.match(mobiledocRegex)[1];
+      mobiledoc = JSON.parse(mobiledocString);
+      post = new MobiledocParser(this.builder).parse(mobiledoc);
+
+      const range = this.cursor.offsets;
+      const nextPosition = range.head.clone();
+      this.run(postEditor => {
+        const markers = post.sections.head.markers.toArray();
+        postEditor.insertMarkersAtPosition(range.head, markers);
+        const length = reduce(markers, (prev, m) => prev + m.length, 0);
+
+        nextPosition.offset += length;
+      });
+      this.cursor.moveToPosition(nextPosition);
+    }
+    // read the mobiledoc out of the event
+    // if it's there, walk that mobiledoc and apply it to what is here
   }
 }
 

@@ -579,10 +579,23 @@ class PostEditor {
     });
   }
 
+  insertMarkersAtPosition(position, markers=[]) {
+    const { section, offset } = position;
+    this.splitSectionMarkerAtOffset(section, offset);
+    let {marker:prevMarker} = section.markerPositionAtOffset(offset);
+    let currentMarker = offset === 0 ? prevMarker : prevMarker.next;
+    
+    markers.forEach(marker => {
+      marker = marker.clone();
+      section.markers.insertBefore(marker, currentMarker);
+      this._markDirty(marker);
+    });
+  }
+
   /**
    * Toggle the given markup on the current selection. If anything in the current
-   * selection has the markup, it will be removed. If nothing in the selection
-   * has the markup, it will be added to everything in the selection.
+   * selection has the markup, the markup will be removed from it. If nothing in the selection
+   * has the markup, the markup will be added to everything in the selection.
    *
    * Usage:
    *
