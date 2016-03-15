@@ -93,7 +93,7 @@ function parseHTML(html) {
 }
 
 function closest(el, selector, contentOnly=false) {
-  if (isTextNode(el)) {
+  if (!isElementNode(el)) {
     el = el.parentElement;
   }
   var matchesSelector = el.matches || el.webkitMatchesSelector || el.mozMatchesSelector || el.msMatchesSelector;
