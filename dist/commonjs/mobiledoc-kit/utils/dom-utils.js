@@ -109,7 +109,7 @@ function parseHTML(html) {
 function closest(el, selector) {
   var contentOnly = arguments.length <= 2 || arguments[2] === undefined ? false : arguments[2];
 
-  if (isTextNode(el)) {
+  if (!isElementNode(el)) {
     el = el.parentElement;
   }
   var matchesSelector = el.matches || el.webkitMatchesSelector || el.mozMatchesSelector || el.msMatchesSelector;
